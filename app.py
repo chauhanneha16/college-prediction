@@ -134,6 +134,4 @@ This app provides university and course recommendations based on your academic m
 """)
 
 st.image("top-10-universities-in-the-world.png", caption="Achieve Your Academic Goals!", use_column_width=True)
-olumn_width=True)
-
 
