@@ -6,9 +6,9 @@ from tensorflow.keras.models import load_model
 import matplotlib.pyplot as plt
 import seaborn as sns
 import openai
-import os
+import time
 
-# Set the page config
+# Set the page config for better mobile support
 st.set_page_config(page_title="University Recommendation System", page_icon="🎓", layout="wide")
 
 # Load the expanded dataset
@@ -35,8 +35,8 @@ model, scaler, label_encoder_course, label_encoder_uni = load_model_and_preproce
 # Access the OpenAI API key from Streamlit secrets
 openai.api_key = st.secrets["openai"]["api_key"]
 
-# Function to generate personalized advice using OpenAI API
-def generate_personalized_advice(university, course, marks):
+# Function to generate personalized advice using OpenAI API with rate limiting
+def generate_personalized_advice(university, course, marks, max_requests=5, tokens_per_request=50):
     try:
         prompt = (
             f"Student's Marks: {marks}\n"
@@ -44,15 +44,20 @@ def generate_personalized_advice(university, course, marks):
             f"Recommended Course: {course}\n"
             f"Provide personalized advice and additional information for the student to improve their chances of admission."
         )
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system", "content": "You are a helpful assistant."},
-                {"role": "user", "content": prompt}
-            ]
-        )
-        result = response['choices'][0]['message']['content'].strip()
-        return result
+        responses = []
+        for _ in range(max_requests):
+            response = openai.ChatCompletion.create(
+                model="gpt-3.5-turbo",
+                messages=[
+                    {"role": "system", "content": "You are a helpful assistant."},
+                    {"role": "user", "content": prompt}
+                ],
+                max_tokens=tokens_per_request
+            )
+            responses.append(response['choices'][0]['message']['content'].strip())
+            time.sleep(1)  # Sleep to avoid hitting rate limits
+
+        return " ".join(responses)
     except openai.error.OpenAIError as e:
         if "quota" in str(e):
             st.error("An error occurred while generating personalized advice: You have exceeded your current quota. Please check your plan and billing details.")
@@ -88,10 +93,11 @@ def predict_university_and_advice(science_marks, maths_marks, history_marks, eng
             return predicted_uni, university_link, scholarship_info, academic_fee, recommended_course, personalized_advice
         else:
             st.error(f"Predicted university '{predicted_uni}' not found in the dataset.")
-            return None, None, None, None, None, None
+            return None, None, None, None, None, []
+
     except Exception as e:
         st.error(f"An error occurred during prediction: {e}")
-        return None, None, None, None, None, None
+        return None, None, None, None, None, []
 
 st.title('University Recommendation System')
 st.subheader('Advisor: Dr. Neha Chauhan')
@@ -118,9 +124,11 @@ if st.sidebar.button('Submit'):
         st.write(f"### Scholarship Information: [Link]({scholarship})")
         st.write(f"### Academic Fee: **{fee}**")
         
-        st.write("### Personal Advice and Additional Information:")
-        st.write(advice)
+        st.write("### Personal Advice:")
+        for item in advice:
+            st.write(f"- {item}")
         
+        # Visualize the input data
         st.write("### Your Marks Overview")
         marks = {
             'Subjects': ['Science', 'Maths', 'History', 'English', 'GRE'],
