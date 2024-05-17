@@ -32,8 +32,8 @@ def load_model_and_preprocessors():
 
 model, scaler, label_encoder_course, label_encoder_uni = load_model_and_preprocessors()
 
-# Access the OpenAI API key from environment variable
-openai.api_key = os.getenv("OPENAI_API_KEY")
+# Access the OpenAI API key from Streamlit secrets
+openai.api_key = st.secrets["openai"]["api_key"]
 
 # Function to generate personalized advice using OpenAI API
 def generate_personalized_advice(university, course, marks):
@@ -140,6 +140,7 @@ This app provides university and course recommendations based on your academic m
 """)
 
 st.image("top-10-universities-in-the-world.png", caption="Achieve Your Academic Goals!", use_column_width=True)
+
 
 
 
