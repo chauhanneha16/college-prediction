@@ -144,4 +144,3 @@ st.image("top-10-universities-in-the-world.png", caption="Achieve Your Academic 
 
 
 
-
