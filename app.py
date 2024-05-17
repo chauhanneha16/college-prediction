@@ -1,5 +1,3 @@
-
-
 import streamlit as st
 import numpy as np
 import pandas as pd
@@ -8,6 +6,7 @@ from tensorflow.keras.models import load_model
 import matplotlib.pyplot as plt
 import seaborn as sns
 import openai
+import os
 
 # Set the page config
 st.set_page_config(page_title="University Recommendation System", page_icon="🎓", layout="wide")
@@ -33,6 +32,9 @@ def load_model_and_preprocessors():
 
 model, scaler, label_encoder_course, label_encoder_uni = load_model_and_preprocessors()
 
+# Access the OpenAI API key from environment variable
+openai.api_key = os.getenv("OPENAI_API_KEY")
+
 # Function to generate personalized advice using OpenAI API
 def generate_personalized_advice(university, course, marks):
     try:
@@ -42,7 +44,6 @@ def generate_personalized_advice(university, course, marks):
             f"Recommended Course: {course}\n"
             f"Provide personalized advice and additional information for the student to improve their chances of admission."
         )
-        openai.api_key = st.secrets["openai"]["api_key"]
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=[
@@ -52,8 +53,11 @@ def generate_personalized_advice(university, course, marks):
         )
         result = response['choices'][0]['message']['content'].strip()
         return result
-    except Exception as e:
-        st.error(f"An error occurred while generating personalized advice: {e}")
+    except openai.error.OpenAIError as e:
+        if "quota" in str(e):
+            st.error("An error occurred while generating personalized advice: You have exceeded your current quota. Please check your plan and billing details.")
+        else:
+            st.error(f"An error occurred while generating personalized advice: {e}")
         return "Advice generation failed."
 
 # Function to predict the university, recommended course, and advice based on input marks
@@ -136,5 +140,6 @@ This app provides university and course recommendations based on your academic m
 """)
 
 st.image("top-10-universities-in-the-world.png", caption="Achieve Your Academic Goals!", use_column_width=True)
+
 
 
