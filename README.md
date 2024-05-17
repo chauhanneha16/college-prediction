@@ -22,9 +22,10 @@ To use the app, simply input your marks in the provided fields and click "Submit
 Follow these steps to deploy the app on Streamlit Community Cloud:
 
 ### Ensure Your Project Directory Contains the Following Files:
+Here is the revised list of files for your project:
 
 - `app.py`: Your Streamlit app script.
-- 'university_data.csv' : Dataset
+- `university_data.csv`: Dataset.
 - `requirements.txt`: List of dependencies.
 - `university_recommendation_model.h5`: Your saved model.
 - `scaler.pkl`: Your saved scaler.
